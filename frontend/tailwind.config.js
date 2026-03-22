@@ -7,21 +7,20 @@ export default {
         pulse: {
           blue: '#3B82F6',
           purple: '#8B5CF6',
-          // Surface elevation system (lighter = higher)
           dark: '#08080C',
           base: '#0A0A0F',
           raised: '#0F1117',
           card: '#141420',
           overlay: '#1A1A2E',
           elevated: '#222238',
-          // Semantic
           success: '#22C55E',
           warning: '#F59E0B',
           danger: '#EF4444',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Outfit', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'SF Mono', 'Fira Code', 'monospace'],
       },
       animation: {

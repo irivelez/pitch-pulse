@@ -148,6 +148,7 @@ export function usePitchSocket() {
                                 killer_question: args.killer_question || '',
                                 one_thing_to_fix: args.one_thing_to_fix || '',
                                 pitch_rewrite: args.pitch_rewrite || '',
+                                ideal_pitch: args.ideal_pitch || '',
                             };
                             setReport(reportData);
                         }

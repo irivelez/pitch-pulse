@@ -2,8 +2,9 @@ import { useRef, useCallback, useState } from 'react';
 
 /**
  * Browser-side speech recognition to capture pitch transcript.
- * Uses Web Speech API as a reliable backup for server-side transcription.
- * Works in Chrome, Edge, Safari 14.1+.
+ * Uses Web Speech API — works in Chrome, Edge, Safari 14.1+.
+ * Exposes live transcript (final + interim) for real-time display,
+ * and returns final-only text on stop() for backend use.
  */
 export function useSpeechTranscript() {
     const [transcript, setTranscript] = useState('');
@@ -19,33 +20,32 @@ export function useSpeechTranscript() {
 
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
-        recognition.interimResults = false;
+        recognition.interimResults = true;
         recognition.lang = 'en-US';
 
         recognition.onresult = (event) => {
-            let newText = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
+            let finalText = '';
+            let interimText = '';
+            for (let i = 0; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
-                    newText += event.results[i][0].transcript + ' ';
+                    finalText += event.results[i][0].transcript + ' ';
+                } else {
+                    interimText += event.results[i][0].transcript;
                 }
             }
-            if (newText) {
-                fullTextRef.current += newText;
-                setTranscript(fullTextRef.current);
-                console.log('[SpeechTranscript] Captured:', newText.trim());
-            }
+            fullTextRef.current = finalText;
+            // Live display: final + interim for real-time feel
+            setTranscript((finalText + interimText).trim());
         };
 
         recognition.onerror = (event) => {
             console.warn('[SpeechTranscript] Error:', event.error);
-            // Restart on recoverable errors
             if (event.error === 'no-speech' || event.error === 'aborted') {
                 try { recognition.start(); } catch (e) { /* already running */ }
             }
         };
 
         recognition.onend = () => {
-            // Auto-restart if not explicitly stopped
             if (recognitionRef.current) {
                 try { recognition.start(); } catch (e) { /* already running */ }
             }
@@ -65,7 +65,7 @@ export function useSpeechTranscript() {
 
     const stop = useCallback(() => {
         if (recognitionRef.current) {
-            recognitionRef.current.onend = null; // prevent auto-restart
+            recognitionRef.current.onend = null;
             recognitionRef.current.stop();
             recognitionRef.current = null;
         }

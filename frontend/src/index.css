@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -9,8 +8,8 @@ html, body, #root {
     min-height: 100vh;
     min-height: 100dvh;
     background-color: #08080C;
-    color: #F0F0F5;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #E8E8ED;
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -18,6 +17,11 @@ html, body, #root {
 
 body {
     overscroll-behavior: none;
+}
+
+/* --- Serif Display --- */
+.font-serif {
+    font-family: 'Instrument Serif', Georgia, serif;
 }
 
 /* --- Glass Card System --- */
@@ -32,33 +36,59 @@ body {
 }
 
 .glass-selected {
-    background: rgba(59, 130, 246, 0.06);
-    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
     box-shadow:
-        0 0 20px rgba(59, 130, 246, 0.08),
+        0 0 24px var(--persona-glow, rgba(59, 130, 246, 0.08)),
         0 4px 24px rgba(0, 0, 0, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.glass-elevated {
-    background: rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+/* --- Persona Atmosphere System --- */
+[data-persona="paul_graham"] {
+    --persona-accent: #6B9BFF;
+    --persona-glow: rgba(107, 155, 255, 0.06);
+    --persona-bg: radial-gradient(ellipse 600px 500px at 50% 30%, rgba(107, 155, 255, 0.07) 0%, transparent 70%),
+                  radial-gradient(ellipse 300px 300px at 20% 80%, rgba(107, 155, 255, 0.03) 0%, transparent 70%),
+                  #08080C;
+}
+[data-persona="ben_horowitz"] {
+    --persona-accent: #FF7A5C;
+    --persona-glow: rgba(255, 122, 92, 0.06);
+    --persona-bg: radial-gradient(ellipse 600px 500px at 50% 30%, rgba(255, 122, 92, 0.07) 0%, transparent 70%),
+                  radial-gradient(ellipse 300px 300px at 80% 80%, rgba(255, 122, 92, 0.03) 0%, transparent 70%),
+                  #08080C;
+}
+[data-persona="marc_andreessen"] {
+    --persona-accent: #A78BFA;
+    --persona-glow: rgba(167, 139, 250, 0.06);
+    --persona-bg: radial-gradient(ellipse 600px 500px at 50% 30%, rgba(167, 139, 250, 0.07) 0%, transparent 70%),
+                  radial-gradient(ellipse 300px 300px at 80% 70%, rgba(167, 139, 250, 0.03) 0%, transparent 70%),
+                  #08080C;
 }
 
-/* --- Aurora Ambient Background --- */
+.atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: var(--persona-bg,
+        radial-gradient(ellipse 500px 500px at 15% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 400px at 85% 75%, rgba(139, 92, 246, 0.03) 0%, transparent 70%),
+        #08080C
+    );
+    transition: background 1.2s ease;
+}
+
+/* Aurora for landing (no persona selected) */
 .aurora {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(ellipse 500px 500px at 15% 25%, rgba(59, 130, 246, 0.07) 0%, transparent 70%),
-        radial-gradient(ellipse 400px 400px at 85% 75%, rgba(139, 92, 246, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 500px 500px at 15% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 400px 400px at 85% 75%, rgba(139, 92, 246, 0.03) 0%, transparent 70%),
         #08080C;
 }
 
@@ -69,13 +99,6 @@ body {
         #08080C;
 }
 
-.aurora-blue {
-    background:
-        radial-gradient(ellipse 600px 600px at 50% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 300px 300px at 30% 70%, rgba(139, 92, 246, 0.05) 0%, transparent 70%),
-        #08080C;
-}
-
 /* --- Voice Orb --- */
 .voice-orb {
     width: 160px;
@@ -83,15 +106,6 @@ body {
     border-radius: 50%;
     position: relative;
     transition: box-shadow 0.15s ease-out, background 0.5s ease;
-}
-
-.voice-orb::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 50%;
-    background: transparent;
-    transition: background 0.3s ease;
 }
 
 /* --- Circular Timer Ring --- */
@@ -125,6 +139,11 @@ body {
     to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 /* --- Staggered Entrance --- */
 .stagger-enter {
     opacity: 0;
@@ -136,9 +155,20 @@ body {
     animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* --- Transcript cursor --- */
+.cursor-blink {
+    animation: blink 1s step-end infinite;
+}
+
 /* --- Segmented Control --- */
 .segment-indicator {
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --- Divider --- */
+.divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.06) 80%, transparent);
 }
 
 /* --- Safe Areas --- */

@@ -60,9 +60,10 @@ def generate_report(
     killer_question: str,
     one_thing_to_fix: str,
     pitch_rewrite: str,
+    ideal_pitch: str,
 ) -> dict:
     """Generate board report. Call AFTER delivering verbal feedback.
-    Scores 1-10. verdict: 1-2 sentences in your voice. pitch_rewrite: rewrite their pitch in 2-3 sentences as YOU would pitch it — tight, compelling, investor-ready. All other fields: ONE sentence each."""
+    Scores 1-10. verdict: 1-2 sentences in your voice. pitch_rewrite: rewrite their pitch in 2-3 sentences as YOU would pitch it. ideal_pitch: the PERFECT 60-second pitch for their company — the gold standard version that would make investors lean forward. Write it as a complete, ready-to-deliver pitch script using their real product details. If the idea has no real merit yet, set this to empty string. All other fields: ONE sentence each."""
     return {
         "type": "board_report",
         "scores": {
@@ -80,6 +81,7 @@ def generate_report(
         "killer_question": killer_question,
         "one_thing_to_fix": one_thing_to_fix,
         "pitch_rewrite": pitch_rewrite,
+        "ideal_pitch": ideal_pitch,
     }
 
 
@@ -117,11 +119,20 @@ ON "PITCH_COMPLETE":
    - One question they can't answer — the one that exposes the gap
    - The one thing to fix before they pitch anyone else
    Done. Stop talking.
-2. AFTER you finish speaking, call generate_report tool. The pitch_rewrite field is critical:
-   - Write it IN YOUR VOICE — the way YOU would actually say it to a room of investors. Use your phrases, your rhythm, your style.
-   - Use THEIR specific product/idea — real names, real details from what they said. No brackets, no placeholders, no templates.
+2. AFTER you finish speaking, call generate_report tool. Two written deliverables:
+
+   pitch_rewrite — YOUR quick rewrite of what they said:
+   - Write it IN YOUR VOICE — your phrases, your rhythm, your style.
+   - Use THEIR specific product/idea — real names, real details. No brackets, no placeholders, no templates.
    - If the idea is weak or half-baked, say THAT: "Honestly, I can't rewrite this pitch because there's no pitch here yet. You told me [what they said] but that's not a company, it's a wish. Come back when you have [specific thing missing]."
-   - NEVER output a generic template like "We are building [X] for [Y]." That's consultant garbage. Write like a human who just heard this pitch.
+   - NEVER output a generic template like "We are building [X] for [Y]." That's consultant garbage.
+
+   ideal_pitch — THE PERFECT 60-SECOND PITCH for their company:
+   - This is the gold standard — the pitch that would make investors lean forward and ask for a follow-up.
+   - Write it as a complete, ready-to-deliver script. Structure: hook → problem → solution → market → traction/insight → ask.
+   - Use their REAL product details, company name, market — but craft it like a master storyteller would.
+   - This is about providing genuine value — give them something they can actually practice and deliver.
+   - ONLY write this if the idea has real merit. If the founder pitched something with no substance, set ideal_pitch to empty string "". Don't fabricate a good pitch for a bad idea — that helps no one.
 
 ## HONESTY (NON-NEGOTIABLE)
 You risk millions. A 3/10 pitch gets 3/10. Never soften, never flatter. Lead with truth. If something is missing, say "You didn't mention X — dealbreaker." Reference their ACTUAL words — quote them back. Generic feedback is unacceptable.
