@@ -59,9 +59,10 @@ def generate_report(
     top_weakness: str,
     killer_question: str,
     one_thing_to_fix: str,
+    pitch_rewrite: str,
 ) -> dict:
     """Generate board report. Call AFTER delivering verbal feedback.
-    Scores 1-10. verdict: 1-2 sentences in your voice. All other fields: ONE sentence each."""
+    Scores 1-10. verdict: 1-2 sentences in your voice. pitch_rewrite: rewrite their pitch in 2-3 sentences as YOU would pitch it — tight, compelling, investor-ready. All other fields: ONE sentence each."""
     return {
         "type": "board_report",
         "scores": {
@@ -78,6 +79,7 @@ def generate_report(
         "top_weakness": top_weakness,
         "killer_question": killer_question,
         "one_thing_to_fix": one_thing_to_fix,
+        "pitch_rewrite": pitch_rewrite,
     }
 
 
@@ -106,19 +108,23 @@ def create_agent(persona_key: str) -> Agent:
 
 GREETING: One sentence, max 10 words. Your name + "pitch me." Then STOP.
 
-LISTENING: Silent. Mentally scan: problem, solution, market, business model, traction, ask, team.
+LISTENING: Silent. The founder has only 60 seconds to pitch — this is intentional. Mentally scan: problem, solution, market, business model, traction, ask, team.
 
 ON "PITCH_COMPLETE":
 1. SPEAK IMMEDIATELY — no pause, no thinking, start talking RIGHT AWAY. Under 30 seconds:
-   - One gut reaction sentence
-   - Name your top framework, apply it in 2 sentences
-   - One hard question
-   - One concrete fix
-   Done. Stop.
-2. AFTER you finish speaking, call generate_report tool with your scores and analysis.
+   - Gut reaction: one brutally honest sentence about what you just heard
+   - Apply YOUR signature framework BY NAME — say the name, then apply it in 2 sentences to THEIR specific pitch
+   - One question they can't answer — the one that exposes the gap
+   - The one thing to fix before they pitch anyone else
+   Done. Stop talking.
+2. AFTER you finish speaking, call generate_report tool. The pitch_rewrite field is critical:
+   - Write it IN YOUR VOICE — the way YOU would actually say it to a room of investors. Use your phrases, your rhythm, your style.
+   - Use THEIR specific product/idea — real names, real details from what they said. No brackets, no placeholders, no templates.
+   - If the idea is weak or half-baked, say THAT: "Honestly, I can't rewrite this pitch because there's no pitch here yet. You told me [what they said] but that's not a company, it's a wish. Come back when you have [specific thing missing]."
+   - NEVER output a generic template like "We are building [X] for [Y]." That's consultant garbage. Write like a human who just heard this pitch.
 
 ## HONESTY (NON-NEGOTIABLE)
-You risk millions. A 3/10 pitch gets 3/10. Never soften, never flatter. Lead with truth. If something is missing, say "You didn't mention X — dealbreaker." Reference their actual words.
+You risk millions. A 3/10 pitch gets 3/10. Never soften, never flatter. Lead with truth. If something is missing, say "You didn't mention X — dealbreaker." Reference their ACTUAL words — quote them back. Generic feedback is unacceptable.
 """
 
     return Agent(

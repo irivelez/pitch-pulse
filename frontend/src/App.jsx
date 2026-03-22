@@ -45,6 +45,7 @@ function App() {
                 <BoardReport
                     data={reportData}
                     personaName={persona?.name}
+                    personaKey={persona?.key}
                     onReset={handleReset}
                 />
             )}

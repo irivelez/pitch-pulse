@@ -103,6 +103,7 @@ export function usePitchSocket() {
                                 top_weakness: args.top_weakness || '',
                                 killer_question: args.killer_question || '',
                                 one_thing_to_fix: args.one_thing_to_fix || '',
+                                pitch_rewrite: args.pitch_rewrite || '',
                             };
                             setReport(reportData);
                         }

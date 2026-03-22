@@ -184,7 +184,7 @@ export default function VoiceSession({ persona, socket, onReport, onBack }) {
             {/* Back */}
             <button
                 onClick={handleBack}
-                className="absolute top-6 left-6 z-20 text-[#5C5C72] hover:text-[#9393A8] transition-colors text-sm flex items-center gap-1.5"
+                className="absolute top-6 left-6 z-20 safe-area-top text-[#5C5C72] hover:text-[#9393A8] transition-colors text-sm flex items-center gap-1.5"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
