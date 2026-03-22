@@ -199,6 +199,7 @@ export function usePitchSocket() {
         }
         setStatus('DISCONNECTED');
         setGreetingDone(false);
+        setReport(null);
         releaseWakeLock();
     }, []);
 
