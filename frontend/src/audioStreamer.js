@@ -1,8 +1,18 @@
 export class AudioStreamer {
-    constructor(sampleRate = 24000) {
-        this.context = new (window.AudioContext || window.webkitAudioContext)({
-            sampleRate: sampleRate,
-        });
+    /**
+     * @param {number} sampleRate
+     * @param {AudioContext} [audioContext] — pass a pre-created context (from user gesture) for iOS compatibility
+     */
+    constructor(sampleRate = 24000, audioContext) {
+        if (audioContext) {
+            this.context = audioContext;
+            this._ownsContext = false;
+        } else {
+            this.context = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: sampleRate,
+            });
+            this._ownsContext = true;
+        }
         this.audioQueue = [];
         this.isPlaying = false;
         this.sampleRate = sampleRate;

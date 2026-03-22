@@ -6,54 +6,121 @@ export class AudioRecorder {
         this.source = null;
         this.processor = null;
         this.onAudioData = null;
+        this._ownsContext = false;
+        this._ownsStream = false;
     }
 
-    async start(onAudioData) {
+    /**
+     * Start recording. Accepts an existing AudioContext and MediaStream
+     * so they can be created during a user gesture (required on iOS).
+     */
+    async start(onAudioData, { audioContext, stream } = {}) {
         this.onAudioData = onAudioData;
 
         try {
-            console.log("[AudioRecorder] Requesting microphone access...");
-            this.stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: true
-                }
-            });
-            console.log("[AudioRecorder] Microphone access granted.");
+            // Use provided stream or request mic (fallback for non-iOS)
+            if (stream) {
+                this.stream = stream;
+                this._ownsStream = false;
+            } else {
+                console.log("[AudioRecorder] Requesting microphone access...");
+                this.stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                    }
+                });
+                console.log("[AudioRecorder] Microphone access granted.");
+                this._ownsStream = true;
+            }
 
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                sampleRate: this.sampleRate
-            });
-            console.log(`[AudioRecorder] AudioContext created. State: ${this.audioContext.state}, Rate: ${this.audioContext.sampleRate}`);
+            // Use provided AudioContext or create one
+            if (audioContext) {
+                this.audioContext = audioContext;
+                this._ownsContext = false;
+            } else {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: this.sampleRate,
+                });
+                this._ownsContext = true;
+            }
+            console.log(`[AudioRecorder] AudioContext state: ${this.audioContext.state}, rate: ${this.audioContext.sampleRate}`);
 
             if (this.audioContext.state === 'suspended') {
-                console.log("[AudioRecorder] Context suspended. Resuming...");
+                console.log("[AudioRecorder] Resuming suspended context...");
                 await this.audioContext.resume();
-                console.log(`[AudioRecorder] Context resumed. New State: ${this.audioContext.state}`);
+                console.log(`[AudioRecorder] Resumed. State: ${this.audioContext.state}`);
             }
 
             this.source = this.audioContext.createMediaStreamSource(this.stream);
-            this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
 
-            this.processor.onaudioprocess = (e) => {
-                const inputData = e.inputBuffer.getChannelData(0);
-                const pcm16 = this.floatTo16BitPCM(inputData);
-                const base64 = this.arrayBufferToBase64(pcm16);
-
-                if (this.onAudioData) {
-                    this.onAudioData(base64);
+            // Try AudioWorkletNode first, fall back to ScriptProcessor
+            if (this.audioContext.audioWorklet && typeof this.audioContext.audioWorklet.addModule === 'function') {
+                try {
+                    await this._setupWorklet();
+                    console.log("[AudioRecorder] Using AudioWorklet.");
+                } catch (e) {
+                    console.warn("[AudioRecorder] AudioWorklet failed, falling back to ScriptProcessor:", e);
+                    this._setupScriptProcessor();
                 }
-            };
+            } else {
+                this._setupScriptProcessor();
+            }
 
-            this.source.connect(this.processor);
-            this.processor.connect(this.audioContext.destination);
             console.log("[AudioRecorder] Recording started.");
-
         } catch (error) {
-            console.error("[AudioRecorder] Error starting audio recording:", error);
+            console.error("[AudioRecorder] Error starting:", error);
             throw error;
         }
+    }
+
+    async _setupWorklet() {
+        // Inline the worklet processor as a blob URL to avoid needing a separate file
+        const workletCode = `
+            class PCMProcessor extends AudioWorkletProcessor {
+                process(inputs) {
+                    const input = inputs[0];
+                    if (input && input[0] && input[0].length > 0) {
+                        this.port.postMessage(input[0]);
+                    }
+                    return true;
+                }
+            }
+            registerProcessor('pcm-processor', PCMProcessor);
+        `;
+        const blob = new Blob([workletCode], { type: 'application/javascript' });
+        const url = URL.createObjectURL(blob);
+        await this.audioContext.audioWorklet.addModule(url);
+        URL.revokeObjectURL(url);
+
+        const workletNode = new AudioWorkletNode(this.audioContext, 'pcm-processor');
+        workletNode.port.onmessage = (e) => {
+            const inputData = e.data; // Float32Array
+            const pcm16 = this.floatTo16BitPCM(inputData);
+            const base64 = this.arrayBufferToBase64(pcm16);
+            if (this.onAudioData) {
+                this.onAudioData(base64);
+            }
+        };
+        this.source.connect(workletNode);
+        workletNode.connect(this.audioContext.destination);
+        this.processor = workletNode;
+    }
+
+    _setupScriptProcessor() {
+        this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+        this.processor.onaudioprocess = (e) => {
+            const inputData = e.inputBuffer.getChannelData(0);
+            const pcm16 = this.floatTo16BitPCM(inputData);
+            const base64 = this.arrayBufferToBase64(pcm16);
+            if (this.onAudioData) {
+                this.onAudioData(base64);
+            }
+        };
+        this.source.connect(this.processor);
+        this.processor.connect(this.audioContext.destination);
+        console.log("[AudioRecorder] Using ScriptProcessor (fallback).");
     }
 
     getStream() {
@@ -61,22 +128,26 @@ export class AudioRecorder {
     }
 
     stop() {
-        if (this.stream) {
+        if (this.stream && this._ownsStream) {
             this.stream.getTracks().forEach(track => track.stop());
-            this.stream = null;
         }
+        this.stream = null;
         if (this.source) {
             this.source.disconnect();
             this.source = null;
         }
         if (this.processor) {
+            if (this.processor.port) {
+                // AudioWorkletNode
+                this.processor.port.onmessage = null;
+            }
             this.processor.disconnect();
             this.processor = null;
         }
-        if (this.audioContext) {
+        if (this.audioContext && this._ownsContext) {
             this.audioContext.close();
-            this.audioContext = null;
         }
+        this.audioContext = null;
     }
 
     floatTo16BitPCM(input) {

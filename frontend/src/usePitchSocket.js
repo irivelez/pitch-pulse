@@ -11,7 +11,11 @@ export function usePitchSocket() {
     const audioRecorder = useRef(new AudioRecorder(16000));
     const heartbeatRef = useRef(null);
     const wakeLockRef = useRef(null);
-    const waitingForGreetingPlayback = useRef(false);
+
+    // Pre-created resources (from user gesture)
+    const playbackContextRef = useRef(null);
+    const micContextRef = useRef(null);
+    const micStreamRef = useRef(null);
 
     const requestWakeLock = async () => {
         try {
@@ -27,6 +31,46 @@ export function usePitchSocket() {
             wakeLockRef.current = null;
         }
     };
+
+    /**
+     * Must be called during a user gesture (tap/click).
+     * Creates AudioContexts and requests mic — all within gesture context for iOS.
+     */
+    const prepare = useCallback(async () => {
+        // Create playback AudioContext (for AudioStreamer) — must be in user gesture
+        if (!playbackContextRef.current || playbackContextRef.current.state === 'closed') {
+            playbackContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 24000,
+            });
+        }
+        // Resume immediately in user gesture context
+        if (playbackContextRef.current.state === 'suspended') {
+            await playbackContextRef.current.resume();
+        }
+
+        // Create mic AudioContext (for AudioRecorder)
+        if (!micContextRef.current || micContextRef.current.state === 'closed') {
+            micContextRef.current = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000,
+            });
+        }
+        if (micContextRef.current.state === 'suspended') {
+            await micContextRef.current.resume();
+        }
+
+        // Request mic access now — in user gesture context
+        if (!micStreamRef.current || !micStreamRef.current.active) {
+            micStreamRef.current = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                }
+            });
+        }
+
+        console.log('[PitchSocket] Audio prepared — contexts and mic ready');
+    }, []);
 
     const connect = useCallback((persona) => {
         if (ws.current?.readyState === WebSocket.OPEN) return;
@@ -109,10 +153,10 @@ export function usePitchSocket() {
                         }
                     }
 
-                    // Handle audio playback
+                    // Handle audio playback — use pre-created context
                     if (part.inlineData && part.inlineData.data) {
                         if (!audioStreamer.current) {
-                            audioStreamer.current = new AudioStreamer(24000);
+                            audioStreamer.current = new AudioStreamer(24000, playbackContextRef.current);
                             audioStreamer.current.onIdle = () => {
                                 console.log('[PitchSocket] Audio playback idle — greeting audio finished');
                                 setGreetingDone(true);
@@ -139,6 +183,20 @@ export function usePitchSocket() {
             ws.current.close();
             ws.current = null;
         }
+        // Stop mic stream tracks
+        if (micStreamRef.current) {
+            micStreamRef.current.getTracks().forEach(t => t.stop());
+            micStreamRef.current = null;
+        }
+        // Close contexts we created
+        if (playbackContextRef.current && playbackContextRef.current.state !== 'closed') {
+            playbackContextRef.current.close();
+            playbackContextRef.current = null;
+        }
+        if (micContextRef.current && micContextRef.current.state !== 'closed') {
+            micContextRef.current.close();
+            micContextRef.current = null;
+        }
         setStatus('DISCONNECTED');
         setGreetingDone(false);
         releaseWakeLock();
@@ -153,6 +211,9 @@ export function usePitchSocket() {
                     sampleRate: 16000,
                 }));
             }
+        }, {
+            audioContext: micContextRef.current,
+            stream: micStreamRef.current,
         });
     }, []);
 
@@ -167,12 +228,12 @@ export function usePitchSocket() {
     }, []);
 
     const getMicStream = useCallback(() => {
-        return audioRecorder.current.getStream();
+        return micStreamRef.current || audioRecorder.current.getStream();
     }, []);
 
     useEffect(() => {
         return () => disconnect();
     }, [disconnect]);
 
-    return { status, report, greetingDone, connect, disconnect, startMic, stopMic, sendText, getMicStream };
+    return { status, report, greetingDone, prepare, connect, disconnect, startMic, stopMic, sendText, getMicStream };
 }

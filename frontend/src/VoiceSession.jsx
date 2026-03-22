@@ -116,11 +116,15 @@ export default function VoiceSession({ persona, socket, onReport, onBack }) {
     }, [phase, socket]);
 
     const handleStart = async () => {
-        socket.connect(persona.key);
-        setPhase('GREETING');
-        setTimeout(async () => {
-            try { await socket.startMic(); } catch (e) { console.error('Mic error:', e); }
-        }, 1500);
+        try {
+            // prepare() MUST run in the user gesture (tap) — creates AudioContexts + mic on iOS
+            await socket.prepare();
+            socket.connect(persona.key);
+            await socket.startMic();
+            setPhase('GREETING');
+        } catch (e) {
+            console.error('Session start error:', e);
+        }
     };
 
     const handleBack = () => {
