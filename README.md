@@ -21,7 +21,7 @@ PitchPulse gives every founder access to "office hours with Paul Graham" -- a li
 1. **Choose your advisor** -- Paul Graham (The Scalpel), Ben Horowitz (The Hammer), or Marc Andreessen (The Mirror)
 2. **Pitch your startup** -- 45 or 60 seconds, voice only, no slides
 3. **Get roasted** -- Immediate spoken feedback: gut reaction, signature framework applied to YOUR pitch, the question you can't answer, the one thing to fix
-4. **Read your report** -- Scores across 7 dimensions, verdict in the advisor's voice, and your pitch rewritten by a legendary investor
+4. **Read your report** -- Scores across 7 dimensions, verdict in the advisor's voice, your pitch rewritten, and an ideal 60-second pitch written for you by a legendary investor
 
 The entire experience takes under 3 minutes.
 
@@ -30,7 +30,8 @@ The entire experience takes under 3 minutes.
 - **Voice-first, not text-first.** Real-time speech-to-speech conversation powered by Gemini Live API. You talk, they talk back. No typing.
 - **Named personas, not generic AI.** Each advisor has distinct frameworks, speaking patterns, and evaluation criteria drawn from their real philosophies and published thinking.
 - **Brutally honest.** A 3/10 pitch gets a 3/10. The system is designed to tell you the truth, not make you feel good.
-- **Pitch rewrite.** Every report ends with your pitch rewritten in the advisor's voice -- tight, compelling, investor-ready. Or, if the idea isn't there yet, they'll tell you that too.
+- **Pitch rewrite + ideal pitch.** Every report includes your pitch rewritten in the advisor's voice, plus a ready-to-deliver 60-second ideal pitch written specifically for your company -- the crown jewel. If the idea isn't there yet, they'll tell you that too.
+- **Live transcript.** Your words appear in real-time on screen as you speak, proving the AI is listening and capturing everything.
 
 ## Advisors
 
@@ -48,7 +49,7 @@ New personas are plug-and-play -- drop a `.md` file in the personas directory an
 - **Backend:** Python + FastAPI + WebSocket for bidirectional audio streaming
 - **Frontend:** React 19 + Vite + Tailwind CSS
 - **Audio:** PCM 16kHz mic capture with echo cancellation/noise suppression, 24kHz playback, Web Speech API for backup transcription
-- **Design:** Glass morphism, aurora ambient backgrounds, audio-reactive voice orb, staggered reveal animations
+- **Design:** Editorial typography (Outfit + Instrument Serif), persona atmosphere color shifts, audio-reactive voice orb, glass cards, staggered reveal animations
 - **Deploy:** Docker multi-stage build on Google Cloud Run
 
 ## Architecture
